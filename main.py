@@ -4,31 +4,41 @@ from torchvision import transforms
 from torchvision.datasets import CIFAR10
 import os
 
-from hparams import config
 import wandb
+from omegaconf import DictConfig, OmegaConf
+import hydra
 
 from modeling.diffusion import DiffusionModel
 from modeling.training import generate_samples, train_epoch
 from modeling.unet import UnetModel
 
 
-def main(device: str):
+@hydra.main(config_path="config", config_name="config")
+def main(cfg: DictConfig):
     torch.manual_seed(54)  # best seed ever
-    wandb.init(config=config, project="ddpm_efdl", name="init params")
-    num_epochs = config['epochs']
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+
+    wandb.init(config=cfg, project="ddpm_efdl", name=cfg['run_name'])
+    wandb.log_artifact("config/config.yaml")
+
+    num_epochs = cfg['train_params']['epochs']
 
     ddpm = DiffusionModel(
-        eps_model=UnetModel(config['img_channels'],
-                            config['img_channels'],
-                            hidden_size=config['hidden_size']),
-        betas=config['betas'],
-        num_timesteps=config['num_timesteps'],
+        eps_model=UnetModel(cfg['model']['img_channels'],
+                            cfg['model']['img_channels'],
+                            hidden_size=cfg['model']['hidden_size']),
+        betas=cfg['model']['betas'],
+        num_timesteps=cfg['model']['num_timesteps'],
     )
     ddpm.to(device)
     wandb.watch(ddpm)
 
+    all_transforms = [transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]
+    if cfg['augs']['rand_flip']:
+        all_transforms.append(transforms.RandomHorizontalFlip())
+
     train_transforms = transforms.Compose(
-        [transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]
+        all_transforms
     )
 
     dataset = CIFAR10(
@@ -38,10 +48,17 @@ def main(device: str):
         transform=train_transforms,
     )
 
-    dataloader = DataLoader(dataset, batch_size=config['batch_size'],
-                                     num_workers=config['num_workers'],
+    dataloader = DataLoader(dataset, batch_size=cfg['train_params']['batch_size'],
+                                     num_workers=cfg['train_params']['num_workers'],
                                      shuffle=True)
-    optim = torch.optim.Adam(ddpm.parameters(), lr=config['learning_rate'])
+
+    if cfg['train_params']['optimizer'] == 'adam':
+        optim = torch.optim.Adam(ddpm.parameters(), lr=cfg['train_params']['learning_rate'])
+    elif cfg['train_params']['optimizer'] == 'sgd':
+        optim = torch.optim.SGD(ddpm.parameters(), lr=cfg['train_params']['learning_rate'],
+                                momentum=['train_params']['momentum'])
+    else:
+        raise NotImplementedError
 
     os.makedirs('samples', exist_ok=True)
 
@@ -51,5 +68,4 @@ def main(device: str):
 
 
 if __name__ == "__main__":
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    main(device=device)
+    main()
