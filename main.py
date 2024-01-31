@@ -14,7 +14,7 @@ from modeling.unet import UnetModel
 
 def main(device: str):
     torch.manual_seed(54)  # best seed ever
-    wandb.init(config=config, project="ddpm_efdl", name="init run")
+    wandb.init(config=config, project="ddpm_efdl", name="init params")
     num_epochs = config['epochs']
 
     ddpm = DiffusionModel(
