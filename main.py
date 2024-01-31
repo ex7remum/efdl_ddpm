@@ -2,6 +2,7 @@ import torch
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from torchvision.datasets import CIFAR10
+import os
 
 from modeling.diffusion import DiffusionModel
 from modeling.training import generate_samples, train_epoch
@@ -29,6 +30,8 @@ def main(device: str, num_epochs: int = 100):
 
     dataloader = DataLoader(dataset, batch_size=128, num_workers=4, shuffle=True)
     optim = torch.optim.Adam(ddpm.parameters(), lr=1e-5)
+
+    os.makedirs('samples', exist_ok=True)
 
     for i in range(num_epochs):
         train_epoch(ddpm, dataloader, optim, device)
