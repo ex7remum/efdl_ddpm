@@ -46,7 +46,7 @@ def main(device: str):
     os.makedirs('samples', exist_ok=True)
 
     for i in range(num_epochs):
-        train_epoch(ddpm, dataloader, optim, device, is_logging=True, num_epoch=i)
+        train_epoch(ddpm, dataloader, optim, device, is_logging=True)
         generate_samples(ddpm, device, f"samples/{i:02d}.png", is_logging=True)
 
 
