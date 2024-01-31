@@ -4,18 +4,27 @@ from torchvision import transforms
 from torchvision.datasets import CIFAR10
 import os
 
+from hparams import config
+import wandb
+
 from modeling.diffusion import DiffusionModel
 from modeling.training import generate_samples, train_epoch
 from modeling.unet import UnetModel
 
 
-def main(device: str, num_epochs: int = 100):
+def main(device: str):
+    wandb.init(config=config, project="ddpm_efdl", name="init run")
+    num_epochs = config['epochs']
+
     ddpm = DiffusionModel(
-        eps_model=UnetModel(3, 3, hidden_size=128),
-        betas=(1e-4, 0.02),
-        num_timesteps=1000,
+        eps_model=UnetModel(config['img_channels'],
+                            config['img_channels'],
+                            hidden_size=config['hidden_size']),
+        betas=config['betas'],
+        num_timesteps=config['num_timesteps'],
     )
     ddpm.to(device)
+    wandb.watch(ddpm)
 
     train_transforms = transforms.Compose(
         [transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]
@@ -28,14 +37,16 @@ def main(device: str, num_epochs: int = 100):
         transform=train_transforms,
     )
 
-    dataloader = DataLoader(dataset, batch_size=128, num_workers=4, shuffle=True)
-    optim = torch.optim.Adam(ddpm.parameters(), lr=1e-5)
+    dataloader = DataLoader(dataset, batch_size=config['batch_size'],
+                                     num_workers=config['num_workers'],
+                                     shuffle=True)
+    optim = torch.optim.Adam(ddpm.parameters(), lr=config['learning_rate'])
 
     os.makedirs('samples', exist_ok=True)
 
     for i in range(num_epochs):
-        train_epoch(ddpm, dataloader, optim, device)
-        generate_samples(ddpm, device, f"samples/{i:02d}.png")
+        train_epoch(ddpm, dataloader, optim, device, is_logging=True)
+        generate_samples(ddpm, device, f"samples/{i:02d}.png", is_logging=True)
 
 
 if __name__ == "__main__":
