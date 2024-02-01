@@ -49,14 +49,14 @@ def main(cfg: DictConfig):
     )
 
     dataloader = DataLoader(dataset, batch_size=cfg['train_params']['batch_size'],
-                                     num_workers=cfg['train_params']['num_workers'],
-                                     shuffle=True)
+                            num_workers=cfg['train_params']['num_workers'],
+                            shuffle=True)
 
     if cfg['train_params']['optimizer'] == 'adam':
         optim = torch.optim.Adam(ddpm.parameters(), lr=cfg['train_params']['learning_rate'])
     elif cfg['train_params']['optimizer'] == 'sgd':
         optim = torch.optim.SGD(ddpm.parameters(), lr=cfg['train_params']['learning_rate'],
-                                momentum=['train_params']['momentum'])
+                                momentum=cfg['train_params']['momentum'])
     else:
         raise NotImplementedError
 
