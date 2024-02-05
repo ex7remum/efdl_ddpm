@@ -15,11 +15,11 @@ from modeling.unet import UnetModel
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
 def main(cfg: DictConfig):
-    print(OmegaConf.to_yaml(cfg))
     torch.manual_seed(54)  # best seed ever
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    wandb.init(project="ddpm_efdl", name=cfg['wandb_params']['run_name'])
+    wandb.init(config=OmegaConf.to_container(cfg, resolve=True, throw_on_missing=True),
+               project="ddpm_efdl", name=cfg['wandb_params']['run_name'])
 
     num_epochs = cfg['train_params']['epochs']
 
