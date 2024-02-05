@@ -19,8 +19,7 @@ def main(cfg: DictConfig):
     torch.manual_seed(54)  # best seed ever
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    wandb.init(config=OmegaConf.to_container(cfg, resolve=True, throw_on_missing=True),
-               project="ddpm_efdl", name=cfg['wandb_params']['run_name'])
+    wandb.init(project="ddpm_efdl", name=cfg['wandb_params']['run_name'])
 
     num_epochs = cfg['train_params']['epochs']
 
