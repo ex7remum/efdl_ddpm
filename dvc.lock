@@ -1,0 +1,38 @@
+schema: '2.0'
+stages:
+  get_data:
+    cmd: python get_data.py
+    deps:
+    - path: get_data.py
+      hash: md5
+      md5: dbd176f3cebd82fccaa5abd570ef0c0b
+      size: 168
+    outs:
+    - path: cifar10
+      hash: md5
+      md5: e252d2c8ba36d1ab3e21a873ab62daa3.dir
+      size: 356712185
+      nfiles: 9
+  train:
+    cmd: python main.py
+    deps:
+    - path: cifar10
+      hash: md5
+      md5: e252d2c8ba36d1ab3e21a873ab62daa3.dir
+      size: 356712185
+      nfiles: 9
+    - path: conf
+      hash: md5
+      md5: 9507fd15adfcb4b31d35db8cc9830383.dir
+      size: 405
+      nfiles: 8
+    - path: modeling
+      hash: md5
+      md5: 8197950845ef8afa962ca96ece626314.dir
+      size: 16084
+      nfiles: 8
+    outs:
+    - path: ddpm.pt
+      hash: md5
+      md5: 9889f9cfa279e166bbbd66fe537d7509
+      size: 45471072
