@@ -15,6 +15,7 @@ from modeling.unet import UnetModel
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
 def main(cfg: DictConfig):
+    print(OmegaConf.to_yaml(cfg))
     torch.manual_seed(54)  # best seed ever
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
