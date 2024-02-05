@@ -13,7 +13,7 @@ from modeling.training import generate_samples, train_epoch
 from modeling.unet import UnetModel
 
 
-@hydra.main(version_base=None, config_path="conf", config_name="conf")
+@hydra.main(version_base=None, config_path="conf", config_name="config")
 def main(cfg: DictConfig):
     torch.manual_seed(54)  # best seed ever
     device = "cuda" if torch.cuda.is_available() else "cpu"
