@@ -13,13 +13,13 @@ from modeling.training import generate_samples, train_epoch
 from modeling.unet import UnetModel
 
 
-@hydra.main(version_base=None, config_path="config", config_name="config")
+@hydra.main(version_base=None, config_path="conf", config_name="conf")
 def main(cfg: DictConfig):
     torch.manual_seed(54)  # best seed ever
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    wandb.init(project="ddpm_efdl", name=cfg['run_name'])
-    wandb.log_artifact("config/config.yaml")
+    wandb.init(config=OmegaConf.to_container(cfg, resolve=True, throw_on_missing=True),
+               project="ddpm_efdl", name=cfg['wandb_params']['run_name'])
 
     num_epochs = cfg['train_params']['epochs']
 
@@ -34,7 +34,7 @@ def main(cfg: DictConfig):
     wandb.watch(ddpm)
 
     all_transforms = [transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]
-    if cfg['augs']['rand_flip']:
+    if cfg['augs']['use_flip']:
         all_transforms.append(transforms.RandomHorizontalFlip())
 
     train_transforms = transforms.Compose(
@@ -44,7 +44,6 @@ def main(cfg: DictConfig):
     dataset = CIFAR10(
         "cifar10",
         train=True,
-        download=True,
         transform=train_transforms,
     )
 
@@ -52,19 +51,15 @@ def main(cfg: DictConfig):
                             num_workers=cfg['train_params']['num_workers'],
                             shuffle=True)
 
-    if cfg['train_params']['optimizer'] == 'adam':
-        optim = torch.optim.Adam(ddpm.parameters(), lr=cfg['train_params']['learning_rate'])
-    elif cfg['train_params']['optimizer'] == 'sgd':
-        optim = torch.optim.SGD(ddpm.parameters(), lr=cfg['train_params']['learning_rate'],
-                                momentum=cfg['train_params']['momentum'])
-    else:
-        raise NotImplementedError
+    optim = hydra.utils.instantiate(cfg['optimizer'], params=ddpm.parameters())
 
     os.makedirs('samples', exist_ok=True)
 
     for i in range(num_epochs):
         train_epoch(ddpm, dataloader, optim, device, is_logging=True)
         generate_samples(ddpm, device, f"samples/{i:02d}.png", is_logging=True)
+        if (i + 1) % 10 == 0:
+            torch.save(ddpm.state_dict(), "ddpm.pt")
 
 
 if __name__ == "__main__":

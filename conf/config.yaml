@@ -1,0 +1,6 @@
+defaults:
+  - augs: no_augs
+  - model: default_model
+  - optimizer: adam
+  - train_params: original
+  - wandb_params: run_params
