@@ -71,6 +71,13 @@ https://wandb.ai/extremum/ddpm_efdl/runs/m392l2u7?workspace=user-extremum
 
 https://wandb.ai/extremum/ddpm_efdl/runs/njyc83tk?workspace=user-extremum
 
+RandomHorizontalFlip + lr=1e-3(так как сид фиксирован, то можно увидеть, что
+на одинаковых эпохах картинки флипнуты относительно прошлых ранов):
+
+https://wandb.ai/extremum/ddpm_efdl/runs/naxa4mh3?workspace=user-extremum
+
+
+
 
 
 # Task 4

@@ -1,5 +1,5 @@
 defaults:
-  - augs: rand_flip
+  - augs: no_augs
   - model: default_model
   - optimizer: adam
   - train_params: original
